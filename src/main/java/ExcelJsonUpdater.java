@@ -116,7 +116,7 @@ public class ExcelJsonUpdater {
                     String cveId = vuln.has("id") ? vuln.get("id").asText() : null;
                     String severity = vuln.has("severity") ? vuln.get("severity").asText() : "";
                     String packagePath = vuln.has("packagePath") ? vuln.get("packagePath").asText() : null;
-                    String discoveryDateRaw = vuln.has("discoveryDate") ? vuln.get("discoveryDate").asText() : "";
+                    String discoveryDateRaw = vuln.has("discoveredDate") ? vuln.get("discoveryDate").asText() : "";
                     String discoveryDateFormatted = "";
                     if (!discoveryDateRaw.isEmpty()) {
                         try {
