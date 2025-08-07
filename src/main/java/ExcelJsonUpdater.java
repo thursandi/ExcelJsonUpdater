@@ -75,7 +75,9 @@ public class ExcelJsonUpdater {
                 int rowIndex = rowsToDelete.get(i);
                 sheet.removeRow(sheet.getRow(rowIndex));
                 // Optional: shift rows up agar rapat
-                sheet.shiftRows(rowIndex + 1, sheet.getLastRowNum(), -1);
+                if (rowIndex < sheet.getLastRowNum()) {
+                    sheet.shiftRows(rowIndex + 1, sheet.getLastRowNum(), -1);
+                }
             }
 
             if (results == null || !results.isArray()) {
