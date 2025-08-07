@@ -70,13 +70,22 @@ public class ExcelJsonUpdater {
                 }
             }
 
-            // Hapus baris dari bawah ke atas
-            for (int i = rowsToDelete.size() - 1; i >= 0; i--) {
-                int rowIndex = rowsToDelete.get(i);
-                sheet.removeRow(sheet.getRow(rowIndex));
-                // Optional: shift rows up agar rapat
-                if (rowIndex < sheet.getLastRowNum()) {
-                    sheet.shiftRows(rowIndex + 1, sheet.getLastRowNum(), -1);
+            
+            // Mark cell CVE id dengan warna hijau jika tidak ada di JSON
+            CellStyle greenStyle = workbook.createCellStyle();
+            greenStyle.setFillForegroundColor(IndexedColors.BRIGHT_GREEN.getIndex());
+            greenStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            for (int i = 0; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+                for (Cell cell : row) {
+                    if (cell.getCellType() == CellType.STRING && cell.getStringCellValue().startsWith("CVE-")) {
+                        String cveId = cell.getStringCellValue().trim();
+                        if (!jsonCveIds.contains(cveId)) {
+                            cell.setCellStyle(greenStyle);
+                        }
+                        break;
+                    }
                 }
             }
 
@@ -86,6 +95,19 @@ public class ExcelJsonUpdater {
             }
 
             int newEntries = 0;
+            // Cari baris terakhir yang mengandung CVE id
+            int lastCveRowIndex = -1;
+            for (int i = 0; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+                for (Cell cell : row) {
+                    if (cell.getCellType() == CellType.STRING && cell.getStringCellValue().startsWith("CVE-")) {
+                        lastCveRowIndex = i;
+                        break;
+                    }
+                }
+            }
+
             for (JsonNode result : results) {
                 JsonNode vulns = result.get("vulnerabilities");
                 if (vulns == null || !vulns.isArray()) continue;
@@ -113,7 +135,12 @@ public class ExcelJsonUpdater {
                     }
                     existingCveIds.add(cveId);
 
-                    Row newRow = sheet.createRow(sheet.getLastRowNum() + 1);
+                    // Tambahkan CVE baru tepat setelah baris CVE terakhir
+                    lastCveRowIndex++;
+                    if (lastCveRowIndex <= sheet.getLastRowNum()) {
+                        sheet.shiftRows(lastCveRowIndex, sheet.getLastRowNum(), 1);
+                    }
+                    Row newRow = sheet.createRow(lastCveRowIndex);
                     // Data dimulai dari kolom ke-3 (indeks 2: id, 3: severity, 4: packagePath, 5: discoveryDate)
                     Cell cell0 = newRow.createCell(2); // id
                     cell0.setCellValue(cveId);
