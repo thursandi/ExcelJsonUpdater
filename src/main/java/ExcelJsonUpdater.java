@@ -116,14 +116,14 @@ public class ExcelJsonUpdater {
                     String cveId = vuln.has("id") ? vuln.get("id").asText() : null;
                     String severity = vuln.has("severity") ? vuln.get("severity").asText() : "";
                     String packagePath = vuln.has("packagePath") ? vuln.get("packagePath").asText() : null;
-                    String discoveryDateRaw = vuln.has("discoveredDate") ? vuln.get("discoveryDate").asText() : "";
-                    String discoveryDateFormatted = "";
-                    if (!discoveryDateRaw.isEmpty()) {
+                    String discoveredDateRaw = vuln.has("discoveredDate") ? vuln.get("discoveredDate").asText() : "";
+                    String discoveredDateFormatted = "";
+                    if (!discoveredDateRaw.isEmpty()) {
                         try {
                             SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-                            Date date = inputFormat.parse(discoveryDateRaw);
+                            Date date = inputFormat.parse(discoveredDateRaw);
                             SimpleDateFormat outputFormat = new SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH);
-                            discoveryDateFormatted = outputFormat.format(date);
+                            discoveredDateFormatted = outputFormat.format(date);
                         } catch (Exception e) {
                             // ignore format errors, leave date blank
                         }
@@ -152,8 +152,8 @@ public class ExcelJsonUpdater {
                     Cell cell1 = newRow.createCell(4); // packagePath
                     cell1.setCellValue(packagePath);
 
-                    Cell cell2 = newRow.createCell(8); // discoveryDate
-                    cell2.setCellValue(discoveryDateFormatted);
+                    Cell cell2 = newRow.createCell(8); // discoveredDate
+                    cell2.setCellValue(discoveredDateFormatted);
 
                     newEntries++;
                 }
