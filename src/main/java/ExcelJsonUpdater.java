@@ -42,6 +42,42 @@ public class ExcelJsonUpdater {
             JsonNode root = mapper.readTree(new File(jsonFilePath));
             JsonNode results = root.get("results");
 
+            // Kumpulkan semua cveId dari JSON
+            Set<String> jsonCveIds = new HashSet<>();
+            for (JsonNode result : results) {
+                JsonNode vulns = result.get("vulnerabilities");
+                if (vulns == null || !vulns.isArray()) continue;
+                for (JsonNode vuln : vulns) {
+                    String cveId = vuln.has("id") ? vuln.get("id").asText() : null;
+                    if (cveId != null) jsonCveIds.add(cveId);
+                }
+            }
+
+            // Cari baris di Excel yang cveId-nya tidak ada di jsonCveIds
+            List<Integer> rowsToDelete = new ArrayList<>();
+            for (int i = 0; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+                String foundCveId = null;
+                for (Cell cell : row) {
+                    if (cell.getCellType() == CellType.STRING && cell.getStringCellValue().startsWith("CVE-")) {
+                        foundCveId = cell.getStringCellValue().trim();
+                        break;
+                    }
+                }
+                if (foundCveId != null && !jsonCveIds.contains(foundCveId)) {
+                    rowsToDelete.add(i);
+                }
+            }
+
+            // Hapus baris dari bawah ke atas
+            for (int i = rowsToDelete.size() - 1; i >= 0; i--) {
+                int rowIndex = rowsToDelete.get(i);
+                sheet.removeRow(sheet.getRow(rowIndex));
+                // Optional: shift rows up agar rapat
+                sheet.shiftRows(rowIndex + 1, sheet.getLastRowNum(), -1);
+            }
+
             if (results == null || !results.isArray()) {
                 System.out.println("No 'results' array found in JSON.");
                 return;
