@@ -54,27 +54,11 @@ public class ExcelJsonUpdater {
             }
 
             // Cari baris di Excel yang cveId-nya tidak ada di jsonCveIds
-            List<Integer> rowsToDelete = new ArrayList<>();
-            for (int i = 0; i <= sheet.getLastRowNum(); i++) {
-                Row row = sheet.getRow(i);
-                if (row == null) continue;
-                String foundCveId = null;
-                for (Cell cell : row) {
-                    if (cell.getCellType() == CellType.STRING && cell.getStringCellValue().startsWith("CVE-")) {
-                        foundCveId = cell.getStringCellValue().trim();
-                        break;
-                    }
-                }
-                if (foundCveId != null && !jsonCveIds.contains(foundCveId)) {
-                    rowsToDelete.add(i);
-                }
-            }
-
-            
-            // Mark cell CVE id dengan warna hijau jika tidak ada di JSON
+            // Mark cell CVE id dengan warna hijau jika tidak ada di JSON dan hitung jumlahnya
             CellStyle greenStyle = workbook.createCellStyle();
             greenStyle.setFillForegroundColor(IndexedColors.BRIGHT_GREEN.getIndex());
             greenStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            int resolvedCount = 0;
             for (int i = 0; i <= sheet.getLastRowNum(); i++) {
                 Row row = sheet.getRow(i);
                 if (row == null) continue;
@@ -83,10 +67,14 @@ public class ExcelJsonUpdater {
                         String cveId = cell.getStringCellValue().trim();
                         if (!jsonCveIds.contains(cveId)) {
                             cell.setCellStyle(greenStyle);
+                            resolvedCount++;
                         }
                         break;
                     }
                 }
+            }
+            if (resolvedCount > 0) {
+                System.out.println(resolvedCount + " CVE id di Excel sudah tidak ada di JSON (ter-resolve)");
             }
 
             if (results == null || !results.isArray()) {
